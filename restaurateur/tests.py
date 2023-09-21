@@ -1,3 +1,6 @@
 from django.test import TestCase
+import requests
 
-# Create your tests here.
+
+test = requests.post('http://127.0.0.1:8000/api/order/').text
+print(test)
