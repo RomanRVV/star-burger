@@ -4,6 +4,7 @@ from django.http import JsonResponse
 from django.templatetags.static import static
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework import status
 
 from .models import Product
 from .models import Order
@@ -66,21 +67,46 @@ def product_list_api(request):
 def register_order(request):
     try:
         data = request.data
-        order = Order.objects.create(first_name=data['firstname'],
-                                     last_name=data['lastname'],
-                                     phonenumber=data['phonenumber'],
-                                     address=data['address'])
         products = data['products']
-        for product in products:
-            OrderItem.objects.create(order=order,
-                                     product=Product.objects.get(id=product['product']),
-                                     quantity=product['quantity'])
-        return Response(data)
-
     except ValueError:
         return Response({
             'error': 'ValueError',
         })
+    except KeyError:
+        return Response({
+            'products': 'Обязательное поле.',
 
+        },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
+    if isinstance(products, str):
+        return Response({
+             'products': 'Ожидался list со значениями, но был получен "str" ',
+        },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+    if isinstance(products, list):
+        if not products:
+            return Response({
+                'products': 'Этот список не может быть пустым.',
+            },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    if not products:
+        return Response({
+            'products': 'Это поле не может быть пустым.',
+        },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
+    order = Order.objects.create(first_name=data['firstname'],
+                                 last_name=data['lastname'],
+                                 phonenumber=data['phonenumber'],
+                                 address=data['address'])
+
+    for product in products:
+        OrderItem.objects.create(order=order,
+                                 product=Product.objects.get(id=product['product']),
+                                 quantity=product['quantity'])
+    return Response(data)
