@@ -2,9 +2,11 @@ import json
 
 from django.http import JsonResponse
 from django.templatetags.static import static
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
+from phonenumber_field.phonenumber import PhoneNumber
 
 from .models import Product
 from .models import Order
@@ -63,50 +65,120 @@ def product_list_api(request):
     })
 
 
+def check_products(data):
+    try:
+        products = data['products']
+    except KeyError:
+        return {
+            'products': 'Обязательное поле.',
+        }
+
+    if isinstance(products, list):
+        if not products:
+            return {
+                'products': 'Этот список не может быть пустым.',
+            }
+    else:
+        if products:
+            return {
+                'products': f'Ожидался list со значениями, но был получен {type(products)} ',
+            }
+
+    if not products:
+        return {
+            'products': 'Это поле не может быть пустым.',
+        }
+
+
+def check_order(data):
+    try:
+        firstname = data['firstname']
+        lastname = data['lastname']
+        phonenumber = data['phonenumber']
+        address = data['address']
+    except KeyError:
+        return {
+            'firstname, lastname, phonenumber, address': 'Обязательное поле'
+        }
+
+    if isinstance(firstname, str):
+        if not firstname:
+            return {
+                'firstname': 'Это поле не может быть пустым.',
+            }
+    else:
+        return {
+            'firstname': 'Not a valid string',
+        }
+
+    if isinstance(lastname, str):
+        if not lastname:
+            return {
+                'lastname': 'Это поле не может быть пустым.',
+            }
+    else:
+        return {
+            'lastname': 'Not a valid string',
+        }
+
+    if isinstance(phonenumber, str):
+        if not phonenumber:
+            return {
+                'phonenumber': 'Это поле не может быть пустым.',
+            }
+    else:
+        return {
+            'phonenumber': 'Not a valid string',
+        }
+
+    if isinstance(address, str):
+        if not address:
+            return {
+                'address': 'Это поле не может быть пустым.',
+            }
+    else:
+        return {
+            'address': 'Not a valid string',
+        }
+
+    number = PhoneNumber.from_string(phonenumber, region='RU')
+    if not number.is_valid():
+        return {
+            'phonenumber': 'Введен некорректный номер телефона'
+        }
+
+
 @api_view(['POST'])
 def register_order(request):
     try:
         data = request.data
+        if check_order(data):
+            return Response(
+                check_order(data),
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        if check_products(data):
+            return Response(
+                check_products(data),
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                            )
         products = data['products']
     except ValueError:
         return Response({
             'error': 'ValueError',
         })
-    except KeyError:
-        return Response({
-            'products': 'Обязательное поле.',
 
-        },
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
-
-    if isinstance(products, str):
-        return Response({
-             'products': 'Ожидался list со значениями, но был получен "str" ',
-        },
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
-    if isinstance(products, list):
-        if not products:
-            return Response({
-                'products': 'Этот список не может быть пустым.',
-            },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-    if not products:
-        return Response({
-            'products': 'Это поле не может быть пустым.',
-        },
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
-
-    order = Order.objects.create(first_name=data['firstname'],
+    order = Order.objects.create(first_name= data['firstname'],
                                  last_name=data['lastname'],
                                  phonenumber=data['phonenumber'],
                                  address=data['address'])
-
-    for product in products:
-        OrderItem.objects.create(order=order,
-                                 product=Product.objects.get(id=product['product']),
-                                 quantity=product['quantity'])
+    try:
+        for product in products:
+            OrderItem.objects.create(order=order,
+                                     product=Product.objects.get(id=product['product']),
+                                     quantity=product['quantity'])
+    except ObjectDoesNotExist:
+        return Response({
+            'products': f'Недопустимый первичный ключ {product["product"]}'
+        })
     return Response(data)
