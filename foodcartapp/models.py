@@ -125,11 +125,11 @@ class RestaurantMenuItem(models.Model):
 
 
 class Order(models.Model):
-    first_name = models.CharField(max_length=100,
-                                  verbose_name='Имя')
-    last_name = models.CharField(max_length=100,
-                                 blank=True,
-                                 verbose_name='Фамилия')
+    firstname = models.CharField(max_length=100,
+                                 verbose_name='Имя')
+    lastname = models.CharField(max_length=100,
+                                blank=True,
+                                verbose_name='Фамилия')
     phonenumber = PhoneNumberField(region='RU',
                                    verbose_name='Номер телефона'
                                    )
@@ -142,7 +142,7 @@ class Order(models.Model):
         verbose_name_plural = 'заказы'
 
     def __str__(self):
-        return self.first_name
+        return self.firstname
 
 
 class OrderItem(models.Model):
@@ -166,7 +166,7 @@ class OrderItem(models.Model):
         verbose_name_plural = 'элементы заказа'
 
     def __str__(self):
-        return f"{self.order.first_name} - {self.product.name}"
+        return f"{self.order.firstname} - {self.product.name}"
 
 
 

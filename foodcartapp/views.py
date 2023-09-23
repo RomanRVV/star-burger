@@ -5,6 +5,10 @@ from django.templatetags.static import static
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework.serializers import ModelSerializer
+from rest_framework.serializers import CharField
+from rest_framework.serializers import ListField
+from rest_framework.serializers import ValidationError
 from rest_framework import status
 from phonenumber_field.phonenumber import PhoneNumber
 
@@ -65,120 +69,51 @@ def product_list_api(request):
     })
 
 
-def check_products(data):
-    try:
-        products = data['products']
-    except KeyError:
-        return {
-            'products': 'Обязательное поле.',
-        }
+class OrderItemSerializer(ModelSerializer):
 
-    if isinstance(products, list):
-        if not products:
-            return {
-                'products': 'Этот список не может быть пустым.',
-            }
-    else:
-        if products:
-            return {
-                'products': f'Ожидался list со значениями, но был получен {type(products)} ',
-            }
+    product = CharField()
 
-    if not products:
-        return {
-            'products': 'Это поле не может быть пустым.',
-        }
+    def validate_product(self, value):
+        try:
+            Product.objects.get(id=value)
+            return value
+        except ObjectDoesNotExist:
+            raise ValidationError(
+                f'products: Недопустимый первичный ключ {value}'
+            )
+
+    class Meta:
+        model = OrderItem
+        fields = ['quantity', 'product']
 
 
-def check_order(data):
-    try:
-        firstname = data['firstname']
-        lastname = data['lastname']
-        phonenumber = data['phonenumber']
-        address = data['address']
-    except KeyError:
-        return {
-            'firstname, lastname, phonenumber, address': 'Обязательное поле'
-        }
+class OrderSerializer(ModelSerializer):
 
-    if isinstance(firstname, str):
-        if not firstname:
-            return {
-                'firstname': 'Это поле не может быть пустым.',
-            }
-    else:
-        return {
-            'firstname': 'Not a valid string',
-        }
+    products = ListField(
+        child=OrderItemSerializer(), allow_empty=False
+    )
 
-    if isinstance(lastname, str):
-        if not lastname:
-            return {
-                'lastname': 'Это поле не может быть пустым.',
-            }
-    else:
-        return {
-            'lastname': 'Not a valid string',
-        }
-
-    if isinstance(phonenumber, str):
-        if not phonenumber:
-            return {
-                'phonenumber': 'Это поле не может быть пустым.',
-            }
-    else:
-        return {
-            'phonenumber': 'Not a valid string',
-        }
-
-    if isinstance(address, str):
-        if not address:
-            return {
-                'address': 'Это поле не может быть пустым.',
-            }
-    else:
-        return {
-            'address': 'Not a valid string',
-        }
-
-    number = PhoneNumber.from_string(phonenumber, region='RU')
-    if not number.is_valid():
-        return {
-            'phonenumber': 'Введен некорректный номер телефона'
-        }
+    class Meta:
+        model = Order
+        fields = ['firstname', 'lastname', 'phonenumber', 'address', 'products']
 
 
 @api_view(['POST'])
 def register_order(request):
-    try:
-        data = request.data
-        if check_order(data):
-            return Response(
-                check_order(data),
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-        if check_products(data):
-            return Response(
-                check_products(data),
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-                            )
-        products = data['products']
-    except ValueError:
-        return Response({
-            'error': 'ValueError',
-        })
+    serializer = OrderSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
 
-    order = Order.objects.create(first_name= data['firstname'],
-                                 last_name=data['lastname'],
-                                 phonenumber=data['phonenumber'],
-                                 address=data['address'])
-    try:
-        for product in products:
-            OrderItem.objects.create(order=order,
-                                     product=Product.objects.get(id=product['product']),
-                                     quantity=product['quantity'])
-    except ObjectDoesNotExist:
-        return Response({
-            'products': f'Недопустимый первичный ключ {product["product"]}'
-        })
-    return Response(data)
+    order = Order.objects.create(firstname=serializer.validated_data['firstname'],
+                                 lastname=serializer.validated_data['lastname'],
+                                 phonenumber=serializer.validated_data['phonenumber'],
+                                 address=serializer.validated_data['address'])
+
+    products = serializer.validated_data['products']
+    print(products)
+    for product in products:
+        print(product)
+        OrderItem.objects.create(order=order,
+                                 product=Product.objects.get(id=product['product']),
+                                 quantity=int(product['quantity']))
+
+    return Response(serializer.validated_data)
