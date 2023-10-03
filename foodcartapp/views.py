@@ -90,12 +90,12 @@ class OrderItemSerializer(ModelSerializer):
 class OrderSerializer(ModelSerializer):
 
     products = ListField(
-        child=OrderItemSerializer(), allow_empty=False
+        child=OrderItemSerializer(), allow_empty=False, write_only=True
     )
 
     class Meta:
         model = Order
-        fields = ['firstname', 'lastname', 'phonenumber', 'address', 'products']
+        fields = ['id', 'firstname', 'lastname', 'phonenumber', 'address', 'products']
 
 
 @api_view(['POST'])
@@ -116,4 +116,6 @@ def register_order(request):
                                  product=Product.objects.get(id=product['product']),
                                  quantity=int(product['quantity']))
 
-    return Response(serializer.validated_data)
+    order_serializer = OrderSerializer(order)
+
+    return Response(order_serializer.data)
