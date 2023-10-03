@@ -111,9 +111,12 @@ def register_order(request):
     products = serializer.validated_data['products']
     print(products)
     for product in products:
+        current_product = Product.objects.get(id=product['product'])
         print(product)
         OrderItem.objects.create(order=order,
-                                 product=Product.objects.get(id=product['product']),
-                                 quantity=int(product['quantity']))
+                                 product=current_product,
+                                 quantity=int(product['quantity']),
+                                 price=current_product.price
+                                 )
 
     return Response(OrderSerializer(order).data)

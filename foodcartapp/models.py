@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import F, Sum
 from django.core.validators import MinValueValidator
 from phonenumber_field.modelfields import PhoneNumberField
 
@@ -25,6 +26,7 @@ class Restaurant(models.Model):
 
     def __str__(self):
         return self.name
+
 
 
 class ProductQuerySet(models.QuerySet):
@@ -158,6 +160,15 @@ class OrderItem(models.Model):
         related_name='items',
         verbose_name='продукт',
     )
+
+    price = models.DecimalField(
+        'цена',
+        max_digits=8,
+        decimal_places=2,
+        validators=[MinValueValidator(0)],
+        default=0
+    )
+
     quantity = models.IntegerField(verbose_name='Количество',
                                    default=0)
 
