@@ -116,6 +116,4 @@ def register_order(request):
                                  product=Product.objects.get(id=product['product']),
                                  quantity=int(product['quantity']))
 
-    order_serializer = OrderSerializer(order)
-
-    return Response(order_serializer.data)
+    return Response(OrderSerializer(order).data)
