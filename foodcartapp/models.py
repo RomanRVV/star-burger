@@ -28,7 +28,6 @@ class Restaurant(models.Model):
         return self.name
 
 
-
 class ProductQuerySet(models.QuerySet):
     def available(self):
         products = (
