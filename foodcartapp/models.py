@@ -126,6 +126,18 @@ class RestaurantMenuItem(models.Model):
 
 
 class Order(models.Model):
+
+    CHOICES = (
+        (1, 'Необработанный'),
+        (2, 'Обрабатывается'),
+        (3, 'Доставляет курьер'),
+        (4, 'Выполнен'),
+    )
+
+    status = models.PositiveIntegerField(
+        verbose_name='статус', choices=CHOICES, default=1
+    )
+
     firstname = models.CharField(max_length=100,
                                  verbose_name='Имя')
     lastname = models.CharField(max_length=100,
