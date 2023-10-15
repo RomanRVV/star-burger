@@ -139,6 +139,16 @@ class Order(models.Model):
                                          default=1,
                                          db_index=True)
 
+    PAYMENT_CHOICES = (
+        (1, 'Наличностью'),
+        (2, 'Электронно'),
+    )
+
+    payment_method = models.PositiveIntegerField(choices=PAYMENT_CHOICES,
+                                                 default=1,
+                                                 db_index=True,
+                                                 verbose_name='Способ оплаты')
+
     registered_at = models.DateTimeField(default=timezone.now,
                                          db_index=True,
                                          verbose_name='Время и дата создания заказа')
