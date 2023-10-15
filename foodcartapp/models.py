@@ -134,9 +134,10 @@ class Order(models.Model):
         (4, 'Выполнен'),
     )
 
-    status = models.PositiveIntegerField(
-        verbose_name='статус', choices=CHOICES, default=1
-    )
+    status = models.PositiveIntegerField(verbose_name='Cтатус',
+                                         choices=CHOICES,
+                                         default=1,
+                                         db_index=True)
 
     firstname = models.CharField(max_length=100,
                                  verbose_name='Имя')
@@ -149,6 +150,10 @@ class Order(models.Model):
     address = models.CharField(max_length=200,
                                verbose_name='Адрес доставки',
                                db_index=True)
+
+    comment = models.TextField(max_length=200,
+                               blank=True,
+                               verbose_name='Комментарий')
 
     class Meta:
         verbose_name = 'заказ'
