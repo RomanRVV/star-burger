@@ -28,6 +28,20 @@ class Restaurant(models.Model):
         return self.name
 
 
+class OrderQuerySet(models.QuerySet):
+    def restaurants_for_order(self, order_id):
+        order = self.get(pk=order_id)
+        restaurant = order.restaurant
+        if restaurant:
+            return Restaurant.objects.filter(pk=restaurant.pk).distinct()
+        else:
+            products = order.items.all().values_list('product_id', flat=True)
+            restaurants = Restaurant.objects.filter(menu_items__product_id__in=products).distinct()
+            for product_id in products:
+                restaurants = restaurants.filter(menu_items__product_id=product_id)
+            return restaurants.distinct()
+
+
 class ProductQuerySet(models.QuerySet):
     def available(self):
         products = (
@@ -84,6 +98,10 @@ class Product(models.Model):
         max_length=200,
         blank=True,
     )
+
+    restaurants = models.ManyToManyField(Restaurant,
+                                         related_name='products',
+                                         verbose_name='рестораны')
 
     objects = ProductQuerySet.as_manager()
 
@@ -178,6 +196,14 @@ class Order(models.Model):
     comment = models.TextField(max_length=200,
                                blank=True,
                                verbose_name='Комментарий')
+
+    restaurant = models.ForeignKey(Restaurant,
+                                   on_delete=models.SET_NULL,
+                                   null=True,
+                                   blank=True,
+                                   verbose_name='Ресторан')
+
+    objects = OrderQuerySet.as_manager()
 
     class Meta:
         verbose_name = 'заказ'
