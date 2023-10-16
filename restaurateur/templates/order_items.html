@@ -46,6 +46,9 @@
               Могут Приготовить:<br>
               {% for restaurant in item.restaurants %}
                 {{ restaurant.name }}<br>
+                {% if restaurant.order_distance %}
+                  Расстояние - {{ restaurant.order_distance }} км<br>
+                {% endif %}
               {% endfor %}
             {% endif %}
           </details>

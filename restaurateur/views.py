@@ -5,12 +5,18 @@ from django.shortcuts import redirect, render
 from django.views import View
 from django.urls import reverse_lazy
 from django.contrib.auth.decorators import user_passes_test
+from django.conf import settings
 
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import views as auth_views
 
 
 from foodcartapp.models import Product, Restaurant, Order
+
+from geopy.distance import geodesic
+from geopy import distance
+from environs import Env
+import requests
 
 
 class Login(forms.Form):
@@ -92,12 +98,41 @@ def view_restaurants(request):
     })
 
 
+def fetch_coordinates(address):
+
+    apikey = settings.YANDEX_API_KEY
+    base_url = "https://geocode-maps.yandex.ru/1.x"
+    response = requests.get(base_url, params={
+        "geocode": address,
+        "apikey": apikey,
+        "format": "json",
+    })
+    response.raise_for_status()
+    found_places = response.json()['response']['GeoObjectCollection']['featureMember']
+    if not found_places:
+        return None
+
+    most_relevant = found_places[0]
+    lon, lat = most_relevant['GeoObject']['Point']['pos'].split(" ")
+
+    return float(lon), float(lat)
+
+
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_orders(request):
     orders = Order.objects.annotate(full_price=Sum(F('items__price') * F('items__quantity')))
 
     for order in orders:
-        order.restaurants = Order.objects.restaurants_for_order(order.id)
+        restaurants = Order.objects.restaurants_for_order(order.id)
+        order_coordinate = fetch_coordinates(order.address)
+        for restaurant in restaurants:
+            restaurant_coordinate = fetch_coordinates(restaurant.address)
+            if restaurant_coordinate and order_coordinate:
+                order_distance = geodesic(restaurant_coordinate, order_coordinate).kilometers
+                restaurant.order_distance = round(order_distance, 2)
+            else:
+                restaurant.order_distance = None
+        order.restaurants = sorted(restaurants, key=lambda x: x.order_distance)
 
     return render(request, template_name='order_items.html', context={
         'order_items': orders,
