@@ -22,13 +22,13 @@ class OrderSerializer(ModelSerializer):
     phonenumber = PhoneNumberField()
 
     def create(self, validated_data):
-        products_data = validated_data.pop('products')
+        products = validated_data.pop('products')
         order = Order.objects.create(**validated_data)
-        for product_data in products_data:
+        for product in products:
             OrderItem.objects.create(
                 order=order,
-                price=product_data['product'].price,
-                **product_data
+                price=product['product'].price,
+                **product
             )
         return order
 
