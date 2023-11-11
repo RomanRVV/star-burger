@@ -1,21 +1,13 @@
-import json
-
 from django.http import JsonResponse
 from django.templatetags.static import static
-from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework.serializers import ModelSerializer
-from rest_framework.serializers import CharField
-from rest_framework.serializers import ListField
-from rest_framework.serializers import ValidationError
-from rest_framework import status
-from phonenumber_field.phonenumber import PhoneNumber
 
 from .models import Product
 from .models import Order
 from .models import OrderItem
+from .serializers import OrderSerializer
 
 
 def banners_list_api(request):
@@ -68,35 +60,6 @@ def product_list_api(request):
         'ensure_ascii': False,
         'indent': 4,
     })
-
-
-class OrderItemSerializer(ModelSerializer):
-
-    product = CharField()
-
-    def validate_product(self, value):
-        try:
-            Product.objects.get(id=value)
-            return value
-        except ObjectDoesNotExist:
-            raise ValidationError(
-                f'products: Недопустимый первичный ключ {value}'
-            )
-
-    class Meta:
-        model = OrderItem
-        fields = ['quantity', 'product']
-
-
-class OrderSerializer(ModelSerializer):
-
-    products = ListField(
-        child=OrderItemSerializer(), allow_empty=False, write_only=True
-    )
-
-    class Meta:
-        model = Order
-        fields = ['id', 'firstname', 'lastname', 'phonenumber', 'address', 'products']
 
 
 @transaction.atomic
