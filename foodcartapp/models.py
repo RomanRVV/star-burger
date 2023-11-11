@@ -210,7 +210,7 @@ class Order(models.Model):
         verbose_name_plural = 'заказы'
 
     def __str__(self):
-        return self.firstname
+        return self.firstname, self.status, self.phonenumber, self.address
 
 
 class OrderItem(models.Model):
