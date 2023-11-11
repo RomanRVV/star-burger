@@ -14,6 +14,7 @@ from django.contrib.auth import views as auth_views
 from foodcartapp.models import Product, Restaurant, Order
 from places.models import Place
 from geopy.distance import geodesic
+from geopy.exc import GeocoderTimedOut
 from geopy import distance
 from environs import Env
 import requests
@@ -133,7 +134,11 @@ def view_orders(request):
 
     for order in orders:
         restaurants = Order.objects.restaurants_for_order(order.id)
-        order_coordinate = fetch_coordinates(order.address)
+        try:
+            order_coordinate = fetch_coordinates(order.address)
+        except (GeocoderTimedOut, ValueError):
+            order_coordinate = None
+
         for restaurant in restaurants:
             restaurant_coordinate = fetch_coordinates(restaurant.address)
             if restaurant_coordinate and order_coordinate:
