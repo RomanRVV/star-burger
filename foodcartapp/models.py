@@ -164,7 +164,6 @@ class Order(models.Model):
     )
 
     payment_method = models.PositiveIntegerField(choices=PAYMENT_CHOICES,
-                                                 default=1,
                                                  db_index=True,
                                                  verbose_name='Способ оплаты')
 
@@ -245,8 +244,3 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"{self.order.firstname} - {self.product.name}"
-
-
-
-
-
