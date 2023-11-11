@@ -235,7 +235,7 @@ class OrderItem(models.Model):
     )
 
     quantity = models.IntegerField(verbose_name='Количество',
-                                   default=0)
+                                   validators=[MinValueValidator(1)])
 
     class Meta:
         verbose_name = 'элемент заказа'
