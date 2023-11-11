@@ -5,8 +5,6 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 from .models import Product
-from .models import Order
-from .models import OrderItem
 from .serializers import OrderSerializer
 
 
@@ -67,19 +65,6 @@ def product_list_api(request):
 def register_order(request):
     serializer = OrderSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-
-    order = Order.objects.create(firstname=serializer.validated_data['firstname'],
-                                 lastname=serializer.validated_data['lastname'],
-                                 phonenumber=serializer.validated_data['phonenumber'],
-                                 address=serializer.validated_data['address'])
-
-    products = serializer.validated_data['products']
-    for product in products:
-        current_product = Product.objects.get(id=product['product'])
-        OrderItem.objects.create(order=order,
-                                 product=current_product,
-                                 quantity=int(product['quantity']),
-                                 price=current_product.price
-                                 )
+    order = serializer.save()
 
     return Response(OrderSerializer(order).data)
