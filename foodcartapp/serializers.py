@@ -16,9 +16,7 @@ class OrderItemSerializer(ModelSerializer):
 
 class OrderSerializer(ModelSerializer):
 
-    products = ListField(
-        child=OrderItemSerializer(), allow_empty=False, write_only=True
-    )
+    products = OrderItemSerializer(many=True, allow_empty=False, write_only=True)
     phonenumber = PhoneNumberField()
 
     def create(self, validated_data):
