@@ -7,4 +7,7 @@ djangorestframework==3.14.0
 geopy==2.4.0
 phonenumbers==8.13.26
 requests==2.31.0
+rollbar==1.0.0
+dj-database-url==2.1.0
+
 

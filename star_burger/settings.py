@@ -15,6 +15,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 YANDEX_API_KEY = env('YANDEX_API_KEY')
 SECRET_KEY = env('SECRET_KEY')
 ROLLBAR_KEY = env('ROLLBAR_KEY')
+DATABASE_URL = env.str('DATABASE_URL')
 DEBUG = env.bool('DEBUG', False)
 
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', ['127.0.0.1', 'localhost'])
@@ -94,10 +95,9 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 
 DATABASES = {
-    'default': dj_database_url.config(
-        default='sqlite:////{0}'.format(os.path.join(BASE_DIR, 'db.sqlite3'))
-    )
+    'default': dj_database_url.config(default=DATABASE_URL)
 }
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {
