@@ -54,9 +54,13 @@ python -m venv venv
 pip install -r requirements.txt
 ```
 
-Определите переменную окружения `SECRET_KEY`. Создать файл `.env` в каталоге `star_burger/` и положите туда такой код:
+Зарегистрируйтесь на сайте [rollbar](https://rollbar.com/) и получите токен
+
+Определите переменные окружения `SECRET_KEY`, `ROLLBAR_KEY` и `YANDEX_API_KEY`. Создать файл `.env` в каталоге `star_burger/` и положите туда такой код:
 ```sh
 SECRET_KEY=django-insecure-0if40nf4nf93n4
+ROLLBAR_KEY=023cb99bdb1342ae12312891529215bc7
+YANDEX_API_KEY=aea4fc66-ss45-1984-8bd5-00f2b2e6cdc6
 ```
 
 Создайте файл базы данных SQLite и отмигрируйте её следующей командой:
