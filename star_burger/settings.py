@@ -14,7 +14,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 YANDEX_API_KEY = env('YANDEX_API_KEY')
 SECRET_KEY = env('SECRET_KEY')
-ROLLBAR_KEY = env('ROLLBAR_KEY')
 DATABASE_URL = env.str('DATABASE_URL')
 DEBUG = env.bool('DEBUG', False)
 
@@ -48,7 +47,7 @@ MIDDLEWARE = [
 ]
 
 ROLLBAR = {
-    'access_token': ROLLBAR_KEY,
+    'access_token': env('ROLLBAR_KEY', default=None),
     'environment': 'development' if DEBUG else 'production',
     'branch': 'master',
     'root': '/absolute/path/to/code/root',
